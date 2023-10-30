@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <script>
+        d3.csv('base_de_donnees_clean.csv').then(data => {
+            createLineGraph(data);
+        });
+
+        function createLineGraph(data) {
+            const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+            const width = 700 - margin.left - margin.right;
+            const height = 300 - margin.top - margin.bottom;
+
+            const svg = d3.select('body')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Extract student data
+            const studentData = data.map((d, i) => ({
+                studentID: i + 1,
+                mathPerformance: +d['Performance académique_score en mathématiques'],
+                arabicPerformance: +d['Performance académique_ score en langue arabe'],
+                languagePerformance: +d['Performance académique_ score en première langue']
+            }));
+
+            // Define scales for the line graph
+            const xScale = d3.scaleLinear()
+                .domain([1, studentData.length])
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 20]) // Set the y-axis domain to 0-20
+                .range([height, 0]);
+
+            // Create line functions for each subject
+            const lineMath = d3.line()
+                .x(d => xScale(d.studentID))
+                .y(d => yScale(d.mathPerformance));
+
+            const lineArabic = d3.line()
+                .x(d => xScale(d.studentID))
+                .y(d => yScale(d.arabicPerformance));
+
+            const lineLanguage = d3.line()
+                .x(d => xScale(d.studentID))
+                .y(d => yScale(d.languagePerformance));
+
+            // Create paths for the lines and set the colors
+            svg.append('path')
+                .datum(studentData)
+                .attr('fill', 'none')
+                .attr('stroke', 'blue')
+                .attr('stroke-width', 2)
+                .attr('d', lineMath);
+
+            svg.append('path')
+                .datum(studentData)
+                .attr('fill', 'none')
+                .attr('stroke', 'green')
+                .attr('stroke-width', 2)
+                .attr('d', lineArabic);
+
+            svg.append('path')
+                .datum(studentData)
+                .attr('fill', 'none')
+                .attr('stroke', 'orange')
+                .attr('stroke-width', 2)
+                .attr('d', lineLanguage);
+
+            // Add labels for the axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(xScale).tickSize(0));
+
+            svg.append('g')
+                .call(d3.axisLeft(yScale));
+
+            // Add a title for the line graph
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', -10)
+                .attr('text-anchor', 'middle')
+                .text('');
+
+            // Add labels for the axes
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + 40)
+                .attr('text-anchor', 'middle')
+                .text('Student Order');
+
+            svg.append('text')
+                .attr('x', -height / 2)
+                .attr('y', -40)
+                .attr('transform', 'rotate(-90)')
+                .attr('text-anchor', 'middle')
+                .text('Performance');
+        }
+    </script>
+</body>
+</html>
