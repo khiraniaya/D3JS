@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+
+<script>
+d3.csv('base_de_donnees_clean.csv').then(data => {
+    const repetitionCounts = data.map(d => +d['Performance académique_Nombre de répitition']);
+    createBarPlot(repetitionCounts);
+});
+
+function createBarPlot(data) {
+    const margin = { top: 20, right: 40, bottom: 60, left: 60 };
+    const width = 500 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
+
+    const svg = d3.select('body')
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const repetitionCounts = d3.rollup(data, v => v.length, d => d);
+    
+    // Define the scale for the x-axis
+    const xScale = d3.scaleBand()
+        .domain(Array.from(repetitionCounts.keys()))
+        .range([0, width])
+        .padding(0.1);
+
+    const yScale = d3.scaleLinear()
+        .domain([0, d3.max(repetitionCounts.values())])
+        .nice()
+        .range([height, 0]);
+
+    // Define colors for each count of repetition
+    const colorScale = d3.scaleOrdinal()
+        .domain([0, 1, 2, 3])
+        .range(['green', 'yellow', 'orange', 'red']);
+
+    // Create the bars with different colors
+    svg.selectAll('rect')
+        .data(repetitionCounts)
+        .enter()
+        .append('rect')
+        .attr('x', d => xScale(d[0]))
+        .attr('y', d => yScale(d[1]))
+        .attr('width', xScale.bandwidth())
+        .attr('height', d => height - yScale(d[1]))
+        .attr('fill', d => colorScale(d[0]));
+
+    // Add labels and a title
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height + 50)
+        .attr('text-anchor', 'middle')
+        .text('Number of times student failed the class');
+
+    svg.append('text')
+        .attr('x', -height / 2)
+        .attr('y', -margin.left + 20)
+        .attr('transform', 'rotate(-90)')
+        .attr('text-anchor', 'middle')
+        .text('Count');
+
+    // Add x-axis
+    const xAxis = d3.axisBottom(xScale);
+    svg.append('g')
+        .attr('transform', `translate(0, ${height})`)
+        .call(xAxis);
+
+    // Add y-axis
+    const yAxis = d3.axisLeft(yScale);
+    svg.append('g')
+        .call(yAxis);
+
+    // Add data labels above the bars
+    svg.selectAll('text.bar-label')
+        .data(repetitionCounts)
+        .enter()
+        .append('text')
+        .attr('class', 'bar-label')
+        .attr('x', d => xScale(d[0]) + xScale.bandwidth() / 2)
+        .attr('y', d => yScale(d[1]) - 10)
+        .attr('text-anchor', 'middle')
+        .text(d => d[1]);
+}
+</script>
+
+</body>
+</html>

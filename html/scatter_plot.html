@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scatter Plot</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+<script>
+d3.csv('base_de_donnees_clean.csv').then(data => {
+    createScatterPlot(data);
+});
+
+function createScatterPlot(data) {
+    const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+    const width = 500 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
+
+    const svg = d3.select('body')
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Extract student codes and ages from the dataset
+    const studentCodes = Array.from({ length: 40 }, (_, i) => i + 1);
+    const ages = data.map(d => +d['Informations personnelles_Age']);
+
+    // Define age groups
+    const ageGroups = [
+        { min: 12, max: 15, color: 'green' },
+        { min: 16, max: 17, color: 'orange' },
+        { min: 18, max: 19, color: 'red' },
+    ];
+
+    // Create data points for each student
+    const dataPoints = studentCodes.map((code, index) => {
+        const age = ages[index];
+        let color = 'black'; // Default color
+
+        // Determine the color based on age group
+        for (const group of ageGroups) {
+            if (age >= group.min && age <= group.max) {
+                color = group.color;
+                break;
+            }
+        }
+
+        return { code, age, color };
+    });
+
+    // Define scales for the scatter plot
+    const xScale = d3.scaleBand()
+        .domain(studentCodes.map(String))
+        .range([0, width])
+        .padding(0.1);
+
+    const yScale = d3.scaleLinear()
+        .domain([10, 20])
+        .range([height, 0]);
+
+    // Create circles for the scatter plot
+    svg.selectAll('circle')
+        .data(dataPoints)
+        .enter()
+        .append('circle')
+        .attr('cx', d => xScale(String(d.code)) + xScale.bandwidth() / 2)
+        .attr('cy', d => yScale(d.age))
+        .attr('r', 6)
+        .attr('fill', d => d.color);
+
+    // Add labels for the axes
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScale).tickSize(0))
+        .selectAll('text')
+        .style('text-anchor', 'middle');
+
+    svg.append('g')
+        .call(d3.axisLeft(yScale));
+
+    // Add a title for the scatter plot
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', -10)
+        .attr('text-anchor', 'middle')
+        .text('');
+
+    // Add labels for the axes
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height + 40)
+        .attr('text-anchor', 'middle')
+        .text('Student');
+
+    svg.append('text')
+        .attr('x', -height / 2)
+        .attr('y', -40)
+        .attr('transform', 'rotate(-90)')
+        .attr('text-anchor', 'middle')
+        .text('Age');
+}
+</script>
+
+</body>
+</html>
